@@ -13,5 +13,8 @@
     <rule ref="PEAR.Commenting">
         <exclude name="PEAR.Commenting.FileComment" />
         <exclude name="PEAR.Commenting.ClassComment" />
+        <exclude name="PEAR.Commenting.FunctionComment.Missing" />
+        <exclude name="PEAR.Commenting.FunctionComment.MissingParamComment" />
+        <exclude name="PEAR.Commenting.FunctionComment.MissingReturn" />
     </rule>
 </ruleset>
