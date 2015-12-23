@@ -4,10 +4,11 @@ namespace Alius\Query\Interfaces;
 
 interface StatementUsingWhere
 {
-	/**
+    /**
      * Set data
      *
      * @param mixed $values
+     *
      * @return array
      */
     public function setData($values);
@@ -24,6 +25,7 @@ interface StatementUsingWhere
      *
      * @param string|Closure $column
      * @param string|null    $operator
+     *
      * @return Alius\Query\Where
      */
     public function addWhere($column, $operator = null);

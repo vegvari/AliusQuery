@@ -53,23 +53,24 @@ class Where
      */
     public function build()
     {
-        $q = $this->column . ' ' . $this->operator;
+        $query = $this->column . ' ' . $this->operator;
 
         if ($this->operator === 'IN') {
-            $q .= ' (' . implode(', ', array_keys($this->data)) . ')';
+            $query .= ' (' . implode(', ', array_keys($this->data)) . ')';
         } elseif ($this->operator === 'BETWEEN') {
-            $q .= ' ' . implode(' AND ', array_keys($this->data));
+            $query .= ' ' . implode(' AND ', array_keys($this->data));
         } elseif ($this->operator !== 'IS NULL' && $this->operator !== 'IS NOT NULL') {
-            $q .= ' ' . implode('', array_keys($this->data));
+            $query .= ' ' . implode('', array_keys($this->data));
         }
 
-        return $q;
+        return $query;
     }
 
     /**
      * Equal
      *
      * @param mixed $value
+     *
      * @return Alius\Query\StatementUsingWhere
      */
     public function eq($value)
@@ -83,6 +84,7 @@ class Where
      * Not equal
      *
      * @param mixed $value
+     *
      * @return Alius\Query\StatementUsingWhere
      */
     public function ne($value)
@@ -96,6 +98,7 @@ class Where
      * Less than
      *
      * @param mixed $value
+     *
      * @return Alius\Query\StatementUsingWhere
      */
     public function lt($value)
@@ -109,6 +112,7 @@ class Where
      * Less than or equal
      *
      * @param mixed $value
+     *
      * @return Alius\Query\StatementUsingWhere
      */
     public function lte($value)
@@ -122,6 +126,7 @@ class Where
      * Greater than
      *
      * @param mixed $value
+     *
      * @return Alius\Query\StatementUsingWhere
      */
     public function gt($value)
@@ -135,6 +140,7 @@ class Where
      * Greater than or equal
      *
      * @param mixed $value
+     *
      * @return Alius\Query\StatementUsingWhere
      */
     public function gte($value)
@@ -148,6 +154,7 @@ class Where
      * In
      *
      * @param mixed $value
+     *
      * @return this
      */
     public function in($value)
@@ -162,6 +169,7 @@ class Where
      *
      * @param mixed $value1
      * @param mixed $value2
+     *
      * @return Alius\Query\StatementUsingWhere
      */
     public function between($value1, $value2)
@@ -175,6 +183,7 @@ class Where
      * Like
      *
      * @param mixed $value
+     *
      * @return Alius\Query\StatementUsingWhere
      */
     public function like($value)
@@ -188,6 +197,7 @@ class Where
      * Not like
      *
      * @param mixed $value
+     *
      * @return Alius\Query\StatementUsingWhere
      */
     public function notLike($value)
@@ -199,6 +209,7 @@ class Where
 
     /**
      * Is null
+     *
      * @return Alius\Query\StatementUsingWhere
      */
     public function isNull()
@@ -209,6 +220,7 @@ class Where
 
     /**
      * Is not null
+     *
      * @return Alius\Query\StatementUsingWhere
      */
     public function isNotNull()

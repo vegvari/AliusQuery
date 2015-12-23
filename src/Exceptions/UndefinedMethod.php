@@ -5,14 +5,11 @@ namespace Alius\Query\Exceptions;
 class UndefinedMethod extends QueryException
 {
     /**
-     * Throw exception
-     *
      * @param string $class
      * @param string $name
-     * @return this
      */
-    public static function create($class, $name)
+    public function __construct($class, $name)
     {
-        return new static('Call to undefined method ' . $class . '::' . $name . '()');
+        parent::__construct('Call to undefined method ' . $class . '::' . $name . '()');
     }
 }

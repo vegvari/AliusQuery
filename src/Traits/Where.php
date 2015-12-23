@@ -16,6 +16,7 @@ trait Where
      * Set data
      *
      * @param mixed $values
+     *
      * @return array
      */
     public function setData($values)
@@ -24,10 +25,10 @@ trait Where
 
         $data = [];
 
-        $id = count($this->data);
+        $data_id = count($this->data);
         foreach ($values as $value) {
-            $data[':data' . $id] = $value;
-            $id++;
+            $data[':data' . $data_id] = $value;
+            $data_id++;
         }
 
         $this->data = array_merge($this->data, $data);
@@ -49,6 +50,7 @@ trait Where
      *
      * @param string      $column
      * @param string|null $operator
+     *
      * @return Alius\Query\Where
      */
     public function addWhere($column, $operator = null)
@@ -59,9 +61,8 @@ trait Where
 
         if ($column instanceof Closure) {
             $this->where[] = '(';
-            $return = $column($this);
+            $return        = $column($this);
             $this->where[] = ')';
-
             return $return;
         }
 
@@ -75,13 +76,16 @@ trait Where
      */
     public function buildWhere()
     {
-        $q = [];
+        $query = [];
         foreach ($this->where as $where) {
-            $q[] = (string) $where;
+            $query[] = (string) $where;
         }
 
-        if (! empty($q)) {
-            return $this->query[] = 'WHERE ' . str_replace('( ', '(', str_replace(' )', ')', implode(' ', $q)));
+        if (! empty($query)) {
+            $query = implode(' ', $query);
+            $query = str_replace('( ', '(', $query);
+            $query = str_replace(' )', ')', $query);
+            return $this->query[] = 'WHERE ' . $query;
         }
     }
 }

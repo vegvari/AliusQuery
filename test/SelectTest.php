@@ -169,9 +169,11 @@ class SelectTest extends PHPUnit_Framework_TestCase
             ->where('bar')->isNull()
             ->and('foobar')->isNull()
             ->or('barfoo')->isNull()
-            ->and(function ($select) {
-                return $select->where('fizz')->isNull()->or('buzz')->isNotNull();
-            })
+            ->and(
+                function ($select) {
+                    return $select->where('fizz')->isNull()->or('buzz')->isNotNull();
+                }
+            )
             ->groupBy('foo')
             ->orderBy('bar')
             ->limit(100)

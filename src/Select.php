@@ -75,12 +75,13 @@ class Select implements StatementUsingWhere
      *
      * @param string $name
      * @param array  $args
+     *
      * @return mixed
      */
     public function __call($name, array $args = [])
     {
         if (($name === 'and' || $name === 'or') && ! array_key_exists(0, $args)) {
-            throw MissingArgument::create(get_class($this), $name);
+            throw new MissingArgument(get_class($this), $name);
         }
 
         if ($name === 'and') {
@@ -91,7 +92,7 @@ class Select implements StatementUsingWhere
             return $this->addWhere($args[0], 'OR');
         }
 
-        throw UndefinedMethod::create(get_class($this), $name);
+        throw new UndefinedMethod(get_class($this), $name);
     }
 
     /**
@@ -108,6 +109,7 @@ class Select implements StatementUsingWhere
      * Add select
      *
      * @param mixed $expressions
+     *
      * @return this
      */
     public function select($expressions)
@@ -118,10 +120,10 @@ class Select implements StatementUsingWhere
 
         if (empty($this->select) || array_search('*', $this->select) !== false) {
             $this->select = ['*'];
-        } else {
-            $this->select = array_unique($this->select);
+            return $this;
         }
 
+        $this->select = array_unique($this->select);
         return $this;
     }
 
@@ -129,6 +131,7 @@ class Select implements StatementUsingWhere
      * Replace select
      *
      * @param mixed $expressions
+     *
      * @return this
      */
     public function replaceSelect($expressions)
@@ -151,6 +154,7 @@ class Select implements StatementUsingWhere
      * From table
      *
      * @param string $table
+     *
      * @return this
      */
     public function from($table)
@@ -177,6 +181,7 @@ class Select implements StatementUsingWhere
      * Add group by
      *
      * @param string $columns
+     *
      * @return this
      */
     public function groupBy($columns)
@@ -192,7 +197,8 @@ class Select implements StatementUsingWhere
     /**
      * Replace group by
      *
-     * @param string $expression
+     * @param string $columns
+     *
      * @return this
      */
     public function replaceGroupBy($columns)
@@ -203,6 +209,8 @@ class Select implements StatementUsingWhere
 
     /**
      * Build group by
+     *
+     * @return string|null
      */
     public function buildGroupBy()
     {
@@ -215,6 +223,7 @@ class Select implements StatementUsingWhere
      * Add order by
      *
      * @param string $columns
+     *
      * @return this
      */
     public function orderBy($columns)
@@ -231,6 +240,7 @@ class Select implements StatementUsingWhere
      * Replace order by
      *
      * @param string $columns
+     *
      * @return this
      */
     public function replaceOrderBy($columns)
@@ -254,7 +264,8 @@ class Select implements StatementUsingWhere
     /**
      * Set the offset
      *
-     * @param int  $offset
+     * @param int $offset
+     *
      * @return this
      */
     public function offset($offset)
@@ -270,6 +281,7 @@ class Select implements StatementUsingWhere
      * Set the limit
      *
      * @param int $limit
+     *
      * @return this
      */
     public function limit($limit)
@@ -286,7 +298,8 @@ class Select implements StatementUsingWhere
     /**
      * Set the offset to page * limit
      *
-     * @param int  $page
+     * @param int $page
+     *
      * @return this
      */
     public function page($page)
@@ -308,9 +321,9 @@ class Select implements StatementUsingWhere
         if ($this->limit !== null) {
             if (! isset($this->offset) || $this->offset === 0) {
                 return $this->query[] = 'LIMIT ' . $this->limit;
-            } else {
-                return $this->query[] = 'LIMIT ' . $this->offset . ',' . $this->limit;
             }
+
+            return $this->query[] = 'LIMIT ' . $this->offset . ',' . $this->limit;
         }
     }
 
@@ -318,6 +331,7 @@ class Select implements StatementUsingWhere
      * Where
      *
      * @param string $expression
+     *
      * @return Where
      */
     public function where($expression)
@@ -349,6 +363,7 @@ class Select implements StatementUsingWhere
      * Create an array with trimmed values
      *
      * @param mixed $values
+     *
      * @return array
      */
     protected function processVar($values)
@@ -356,7 +371,7 @@ class Select implements StatementUsingWhere
         $result = [];
 
         $values = is_array($values) ? $values : [$values];
-        foreach ($values as $key => $value) {
+        foreach ($values as $value) {
             $value = preg_replace('/\s+/', ' ', ltrim(rtrim($value, ' '), ' '));
             if ($value !== null && $value !== '') {
                 $result[] = (string) $value;
