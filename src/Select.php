@@ -3,10 +3,9 @@
 namespace Alius\Query;
 
 use Alius\Query\Traits\Where as WhereTrait;
-use Alius\Query\Interfaces\StatementUsingWhere;
-
 use Alius\Query\Exceptions\MissingArgument;
 use Alius\Query\Exceptions\UndefinedMethod;
+use Alius\Query\Interfaces\StatementUsingWhere;
 
 class Select implements StatementUsingWhere
 {
