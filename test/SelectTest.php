@@ -6,7 +6,6 @@ use PHPUnit_Framework_TestCase;
 use Alius\Query\Traits\testLimit;
 use Alius\Query\Traits\testWhere;
 use Alius\Query\Traits\testOrderBy;
-
 use Alius\Query\Exceptions\MissingArgument;
 use Alius\Query\Exceptions\UndefinedMethod;
 
