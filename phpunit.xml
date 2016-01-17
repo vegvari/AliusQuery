@@ -10,7 +10,7 @@
     </php>
 
     <testsuites>
-        <testsuite name="Alius\Query tests">
+        <testsuite name="Alius/Query tests">
             <directory>./test/</directory>
         </testsuite>
     </testsuites>
