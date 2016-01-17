@@ -3,194 +3,268 @@
 namespace Alius\Query;
 
 use PHPUnit_Framework_TestCase;
-use Alius\Query\Traits\testLimit;
-use Alius\Query\Traits\testWhere;
-use Alius\Query\Traits\testOrderBy;
-use Alius\Query\Exceptions\MissingArgument;
-use Alius\Query\Exceptions\UndefinedMethod;
 
 class SelectTest extends PHPUnit_Framework_TestCase
 {
-    use testOrderBy, testLimit, testWhere;
-
     protected $instance;
 
     public function setUp()
     {
-        $this->instance = new Select();
+        $this->instance = new Select(null);
     }
 
-    public function testSelect()
+    /**
+     * @dataProvider constructorDataProvider
+     *
+     * @param string $query
+     * @param string $expr
+     * @param mixed  $data
+     * @param array  $expected_data
+     */
+    public function testConstructor($query, $expr, $data, array $expected_data)
     {
-        // default
-        $this->assertSame('SELECT *', $this->instance->buildSelect());
+        $instance = new Select($expr, $data);
+        $this->assertSame($query, $instance->build());
+        $this->assertSame($expected_data, $instance->data());
+    }
 
-        // * wins
-        $this->instance->select('foo');
-        $this->assertSame('SELECT *', $this->instance->buildSelect());
+    /**
+     * @dataProvider constructorDataProvider
+     *
+     * @param string $query
+     * @param string $expr
+     * @param mixed  $data
+     * @param array  $expected_data
+     */
+    public function testFactory($query, $expr, $data, array $expected_data)
+    {
+        $instance = Query::select($expr, $data);
+        $this->assertSame($query, $instance->build());
+        $this->assertSame($expected_data, $instance->data());
+    }
 
-        // replace with string
-        $this->instance->replaceSelect('foo');
-        $this->assertSame('SELECT foo', $this->instance->buildSelect());
+    public function constructorDataProvider()
+    {
+        return [
+            ['',
+                null,
+                [],
+                [],
+            ],
+            ['',
+                '',
+                [],
+                [],
+            ],
+            ['SELECT foo',
+                'foo',
+                [],
+                [],
+            ],
+            ['SELECT foo = ?',
+                'foo = ?',
+                'bar',
+                ['bar'],
+            ],
+        ];
+    }
 
-        // accept array
-        $this->instance->replaceSelect(['foo', 'bar']);
-        $this->assertSame('SELECT foo, bar', $this->instance->buildSelect());
+    /**
+     * @dataProvider selectDataProvider
+     *
+     * @param string $query
+     * @param mixed  $expr
+     * @param array  $data
+     */
+    public function testSelect($query, $expr, array $data)
+    {
+        $this->assertSame($this->instance->select($expr), $this->instance); // chainable
+        $this->assertSame($query, $this->instance->build());
+        $this->assertSame($data, $this->instance->data());
+    }
 
-        // skip duplicates
-        $this->instance->select(['foo', 'bar', 'foobar']);
-        $this->assertSame('SELECT foo, bar, foobar', $this->instance->buildSelect());
-
-        // skip null, empty
-        $this->instance->select([null, '']);
-        $this->assertSame('SELECT foo, bar, foobar', $this->instance->buildSelect());
-
-        // * wins again
-        $this->instance->select(['apple', 'pear', '*']);
-        $this->assertSame('SELECT *', $this->instance->buildSelect());
-
-        // trim spaces
-        $this->instance->replaceSelect(['  foo    ', '  bar   ', '   foo   bar  ']);
-        $this->assertSame('SELECT foo, bar, foo bar', $this->instance->buildSelect());
-
-        // chainable
-        $this->assertSame($this->instance, $this->instance->select('*'));
-        $this->assertSame($this->instance, $this->instance->replaceSelect('*'));
+    public function selectDataProvider()
+    {
+        return [
+            ['', null, []],
+            ['', '', []],
+            ['SELECT foo', 'foo', []],
+        ];
     }
 
     public function testFrom()
     {
-        // default
-        $this->assertSame(null, $this->instance->buildFrom());
+        // set null, empty, test chainable
+        $this->assertSame($this->instance, $this->instance->from(null));
+        $this->instance->from('');
+        $this->assertSame('', $this->instance->build());
 
-        // accept string
+        // set string
         $this->instance->from('foo');
-        $this->assertSame('FROM foo', $this->instance->buildFrom());
-
-        // replace
         $this->instance->from('bar');
-        $this->assertSame('FROM bar', $this->instance->buildFrom());
+        $this->assertSame('FROM foo, bar', $this->instance->build());
 
-        // null, empty
-        $this->instance->from(null)->from('');
-        $this->assertSame('FROM bar', $this->instance->buildFrom());
+        // set string with data
+        $this->instance->from('? = ?', [1, 2]);
+        $this->assertSame('FROM foo, bar, ? = ?', $this->instance->build());
+        $this->assertSame([1, 2], $this->instance->data());
+    }
 
-        // chainable
-        $this->assertSame($this->instance, $this->instance->from('foobar'));
+    public function testJoin()
+    {
+        // set null, empty, test chainable
+        $this->assertSame($this->instance, $this->instance->join(null));
+        $this->instance->join('');
+        $this->assertSame('', $this->instance->build());
+
+        // set string
+        $this->instance->join('foo');
+        $this->assertSame('JOIN foo', $this->instance->build());
+
+        // set string with data
+        $this->instance->join('? = ?', [1, 2]);
+        $this->assertSame('JOIN foo JOIN ? = ?', $this->instance->build());
+        $this->assertSame([1, 2], $this->instance->data());
+    }
+
+    public function testLeftJoin()
+    {
+        // set null, empty, test chainable
+        $this->assertSame($this->instance, $this->instance->leftJoin(null));
+        $this->instance->leftJoin('');
+        $this->assertSame('', $this->instance->build());
+
+        // set string
+        $this->instance->leftJoin('foo');
+        $this->assertSame('LEFT JOIN foo', $this->instance->build());
+
+        // set string with data
+        $this->instance->leftJoin('? = ?', [1, 2]);
+        $this->assertSame('LEFT JOIN foo LEFT JOIN ? = ?', $this->instance->build());
+        $this->assertSame([1, 2], $this->instance->data());
+    }
+
+    public function testRightJoin()
+    {
+        // set null, empty, test chainable
+        $this->assertSame($this->instance, $this->instance->rightJoin(null));
+        $this->instance->rightJoin('');
+        $this->assertSame('', $this->instance->build());
+
+        // set string
+        $this->instance->rightJoin('foo');
+        $this->assertSame('RIGHT JOIN foo', $this->instance->build());
+
+        // set string with data
+        $this->instance->rightJoin('? = ?', [1, 2]);
+        $this->assertSame('RIGHT JOIN foo RIGHT JOIN ? = ?', $this->instance->build());
+        $this->assertSame([1, 2], $this->instance->data());
+    }
+
+    public function testCrossJoin()
+    {
+        // set null, empty, test chainable
+        $this->assertSame($this->instance, $this->instance->crossJoin(null));
+        $this->instance->crossJoin('');
+        $this->assertSame('', $this->instance->build());
+
+        // set string
+        $this->instance->crossJoin('foo');
+        $this->assertSame('CROSS JOIN foo', $this->instance->build());
+
+        // set string with data
+        $this->instance->crossJoin('? = ?', [1, 2]);
+        $this->assertSame('CROSS JOIN foo CROSS JOIN ? = ?', $this->instance->build());
+        $this->assertSame([1, 2], $this->instance->data());
     }
 
     public function testGroupBy()
     {
-        // default
-        $this->assertSame(null, $this->instance->buildGroupBy());
+        // set null, empty, test chainable
+        $this->assertSame($this->instance, $this->instance->groupBy(null));
+        $this->instance->groupBy('');
+        $this->assertSame('', $this->instance->build());
 
-        // accept string
-        $this->instance->groupBy('bar');
-        $this->assertSame('GROUP BY bar', $this->instance->buildGroupBy());
+        // set string
+        $this->instance->groupBy('foo');
+        $this->assertSame('GROUP BY foo', $this->instance->build());
 
-        // accept array
-        $this->instance->groupBy(['apple', 'pear']);
-        $this->assertSame('GROUP BY bar, apple, pear', $this->instance->buildGroupBy());
+        // set string with data
+        $this->instance->groupBy('? = ?', [1, 2]);
+        $this->assertSame('GROUP BY foo, ? = ?', $this->instance->build());
+        $this->assertSame([1, 2], $this->instance->data());
+    }
 
-        // skip duplicates (* isn't special)
-        $this->instance->groupBy(['pear', 'apple', '*', '*']);
-        $this->assertSame('GROUP BY bar, apple, pear, *', $this->instance->buildGroupBy());
+    public function testHaving()
+    {
+        // set null, empty, test chainable
+        $this->assertSame($this->instance, $this->instance->having(null));
+        $this->instance->having('');
+        $this->assertSame('', $this->instance->build());
 
-        // null, empty
-        $this->instance->groupBy([null, '']);
-        $this->assertSame('GROUP BY bar, apple, pear, *', $this->instance->buildGroupBy());
+        // set string
+        $this->instance->having('foo');
+        $this->assertSame('HAVING foo', $this->instance->build());
 
-        // trim spaces
-        $this->instance->groupBy(['  foo    ', '  bar   ', '   foo   bar  ']);
-        $this->assertSame('GROUP BY bar, apple, pear, *, foo, foo bar', $this->instance->buildGroupBy());
+        // set string with data
+        $this->instance->having('? = ?', [1, 2]);
+        $this->assertSame('HAVING foo ? = ?', $this->instance->build());
+        $this->assertSame([1, 2], $this->instance->data());
+    }
 
-        // replace
-        $this->instance->replaceGroupBy('bar');
-        $this->assertSame('GROUP BY bar', $this->instance->buildGroupBy());
+    public function testOrderBy()
+    {
+        // set null, empty, test chainable
+        $this->assertSame($this->instance, $this->instance->orderBy(null));
+        $this->instance->orderBy('');
+        $this->assertSame('', $this->instance->build());
 
-        // chainable
-        $this->assertSame($this->instance, $this->instance->groupBy('foo'));
+        // set string
+        $this->instance->orderBy('foo');
+        $this->assertSame('ORDER BY foo', $this->instance->build());
+
+        // set string with data
+        $this->instance->orderBy('? = ?', [1, 2]);
+        $this->assertSame('ORDER BY foo, ? = ?', $this->instance->build());
+        $this->assertSame([1, 2], $this->instance->data());
+    }
+
+    public function testLimit()
+    {
+        // set null, empty, zero, test chainable
+        $this->assertSame($this->instance, $this->instance->limit(null));
+        $this->instance->limit('');
+        $this->instance->limit(0);
+        $this->assertSame('', $this->instance->build());
+
+        // set int
+        $this->instance->limit(10);
+        $this->assertSame('LIMIT 10', $this->instance->build());
     }
 
     public function testOffset()
     {
-        // default without limit
-        $this->assertSame(null, $this->instance->buildLimit());
-
-        // valid without limit
-        $this->instance->offset(100);
-        $this->assertSame(null, $this->instance->buildLimit());
-
+        // set null, empty, zero, int, test chainable
+        $this->assertSame($this->instance, $this->instance->offset(null));
+        $this->instance->offset('');
         $this->instance->offset(0);
-        $this->assertSame(null, $this->instance->buildLimit());
+        $this->assertSame('', $this->instance->build());
 
-        // invalid without limit
-        $this->instance->offset(-1);
-        $this->assertSame(null, $this->instance->buildLimit());
-
-        // valid with limit, set offset first
-        $this->instance->offset(200)->limit(100);
-        $this->assertSame('LIMIT 200,100', $this->instance->buildLimit());
-
-        $this->instance->offset(0)->limit(100);
-        $this->assertSame('LIMIT 100', $this->instance->buildLimit());
-
-        // invalid with limit
-        $this->instance->offset(-1);
-        $this->assertSame('LIMIT 100', $this->instance->buildLimit());
-
-        // chainable
-        $this->assertSame($this->instance, $this->instance->offset(0));
+        // set limit
+        $this->instance->offset(10)->limit(10);
+        $this->assertSame('LIMIT 10 OFFSET 10', $this->instance->build());
     }
 
     public function testPage()
     {
-        // valid
-        $this->instance->limit(100)->page(3);
-        $this->assertSame('LIMIT 300,100', $this->instance->buildLimit());
-
+        // set null, empty, zero, int, test chainable
+        $this->assertSame($this->instance, $this->instance->page(null));
+        $this->instance->page('');
         $this->instance->page(0);
-        $this->assertSame('LIMIT 100', $this->instance->buildLimit());
+        $this->assertSame('', $this->instance->build());
 
-        // invalid
-        $this->instance->page(-1);
-        $this->assertSame('LIMIT 100', $this->instance->buildLimit());
-
-        // chainable
-        $this->assertSame($this->instance, $this->instance->page(0));
-    }
-
-    public function testBuild()
-    {
-        $this->instance
-            ->select('*')
-            ->from('foo')
-            ->where('bar')->isNull()
-            ->and('foobar')->isNull()
-            ->or('barfoo')->isNull()
-            ->and(
-                function ($select) {
-                    return $select->where('fizz')->isNull()->or('buzz')->isNotNull();
-                }
-            )
-            ->groupBy('foo')
-            ->orderBy('bar')
-            ->limit(100)
-            ->offset(200);
-
-        $this->assertSame('SELECT * FROM foo WHERE bar IS NULL AND foobar IS NULL OR barfoo IS NULL AND (fizz IS NULL OR buzz IS NOT NULL) GROUP BY foo ORDER BY bar LIMIT 200,100', $this->instance->build());
-        $this->assertSame('SELECT * FROM foo WHERE bar IS NULL AND foobar IS NULL OR barfoo IS NULL AND (fizz IS NULL OR buzz IS NOT NULL) GROUP BY foo ORDER BY bar LIMIT 200,100', (string) $this->instance);
-    }
-
-    public function testCallMissingArgument()
-    {
-        $this->setExpectedException(MissingArgument::class);
-        $this->instance->and();
-    }
-
-    public function testCallUndefinedMethod()
-    {
-        $this->setExpectedException(UndefinedMethod::class);
-        $this->instance->test();
+        // set int with limit
+        $this->instance->page(10)->limit(10);
+        $this->assertSame('LIMIT 10 OFFSET 100', $this->instance->build());
     }
 }

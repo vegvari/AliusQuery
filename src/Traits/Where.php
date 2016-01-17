@@ -3,89 +3,108 @@
 namespace Alius\Query\Traits;
 
 use Closure;
-use Alius\Query\Where as WhereBuilder;
 
 trait Where
 {
     /**
      * @var array
      */
-    protected $data = [];
+    protected $where = [];
 
     /**
-     * Set data
+     * Add where condition
      *
-     * @param mixed $values
-     *
-     * @return array
-     */
-    public function setData($values)
-    {
-        $values = is_array($values) ? $values : [$values];
-
-        $data = [];
-
-        $data_id = count($this->data);
-        foreach ($values as $value) {
-            $data[':data' . $data_id] = $value;
-            $data_id++;
-        }
-
-        $this->data = array_merge($this->data, $data);
-        return $data;
-    }
-
-    /**
-     * Get data
-     *
-     * @return array
-     */
-    public function data()
-    {
-        return $this->data;
-    }
-
-    /**
-     * Add where
-     *
-     * @param string      $column
+     * @param string      $expr
+     * @param mixed       $data
      * @param string|null $operator
      *
-     * @return Alius\Query\Where
+     * return this
      */
-    public function addWhere($column, $operator = null)
+    protected function addWhere($expr, $data = [], $operator = null)
     {
-        if ($operator !== null) {
-            $this->where[] = $operator;
+        if ($expr instanceof Closure) {
+            return $this->addClosure($expr, $operator);
         }
 
-        if ($column instanceof Closure) {
-            $this->where[] = '(';
-            $return        = $column($this);
-            $this->where[] = ')';
-            return $return;
+        $data = is_array($data) ? $data : [$data];
+
+        if (preg_match('/\s+IN$/ui', (string) $expr) === 1) {
+            $tokens = str_repeat('?, ', count($data));
+            $tokens = substr($tokens, 0, strlen($tokens) - 2);
+            $expr .= ' (' . $tokens . ')';
+        } elseif (preg_match('/\s+BETWEEN$/ui', (string) $expr) === 1) {
+            $expr .= ' ? AND ?';
         }
 
-        return $this->where[] = new WhereBuilder($this, $column);
+        if (($expr = $this->processExpression($expr, $data)) !== '') {
+            $this->where[] = $operator === null ? $expr : $operator . ' ' . $expr;
+        }
+
+        return $this;
+    }
+
+    protected function addClosure(Closure $expr, $operator = null)
+    {
+        $before = count($this->where);
+        $expr($this);
+        $after = count($this->where);
+
+        if (isset($this->where[$before])) {
+            $this->where[$before] = $operator === null ? '(' . $this->where[$before] : $operator . ' (' . $this->where[$before];
+            $this->where[$after - 1] .= ')';
+        }
+
+        return $this;
     }
 
     /**
-     * Build where
+     * Add AND where condition
      *
-     * @return string
+     * @param string $expr
+     * @param mixed  $data
+     *
+     * @return this
+     */
+    public function where($expr, $data = [])
+    {
+        return $this->addWhere($expr, $data);
+    }
+
+    /**
+     * Add AND where condition
+     *
+     * @param string $expr
+     * @param mixed  $data
+     *
+     * @return this
+     */
+    public function andWhere($expr, $data = [])
+    {
+        return $this->addWhere($expr, $data, 'AND');
+    }
+
+    /**
+     * Add OR where condition
+     *
+     * @param string $expr
+     * @param mixed  $data
+     *
+     * @return this
+     */
+    public function orWhere($expr, $data = [])
+    {
+        return $this->addWhere($expr, $data, 'OR');
+    }
+
+    /**
+     * Build
+     *
+     * @return string|null
      */
     public function buildWhere()
     {
-        $query = [];
-        foreach ($this->where as $where) {
-            $query[] = (string) $where;
-        }
-
-        if (! empty($query)) {
-            $query = implode(' ', $query);
-            $query = str_replace('( ', '(', $query);
-            $query = str_replace(' )', ')', $query);
-            return $this->query[] = 'WHERE ' . $query;
+        if (! empty($this->where)) {
+            return $this->query[] = 'WHERE ' . implode(' ', $this->where);
         }
     }
 }

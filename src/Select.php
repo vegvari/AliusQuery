@@ -3,11 +3,8 @@
 namespace Alius\Query;
 
 use Alius\Query\Traits\Where as WhereTrait;
-use Alius\Query\Exceptions\MissingArgument;
-use Alius\Query\Exceptions\UndefinedMethod;
-use Alius\Query\Interfaces\StatementUsingWhere;
 
-class Select implements StatementUsingWhere
+class Select extends Statement
 {
     use WhereTrait;
 
@@ -17,9 +14,9 @@ class Select implements StatementUsingWhere
     protected $select = [];
 
     /**
-     * @var string
+     * @var array
      */
-    protected $from;
+    protected $from = [];
 
     /**
      * @var array
@@ -29,17 +26,12 @@ class Select implements StatementUsingWhere
     /**
      * @var array
      */
-    protected $where = [];
+    protected $group_by = [];
 
     /**
      * @var array
      */
-    protected $group_by = [];
-
-    /**
-     * @var null|Having
-     */
-    protected $having;
+    protected $having = [];
 
     /**
      * @var array
@@ -47,233 +39,162 @@ class Select implements StatementUsingWhere
     protected $order_by = [];
 
     /**
-     * @var int
-     */
-    protected $offset = 0;
-
-    /**
      * @var int|null
      */
     protected $limit;
 
     /**
-     * @var array
+     * @var int|null
      */
-    protected $query = [];
+    protected $offset;
 
     /**
-     * @param mixed $expressions
+     * @var int|null
      */
-    public function __construct($expressions = null)
-    {
-        $this->select($expressions);
-    }
+    protected $page;
 
     /**
-     * Keywords as methods
-     *
-     * @param string $name
-     * @param array  $args
-     *
-     * @return mixed
+     * @param mixed $expr
+     * @param mixed $data
      */
-    public function __call($name, array $args = [])
+    public function __construct($expr, $data = [])
     {
-        if (($name === 'and' || $name === 'or') && ! array_key_exists(0, $args)) {
-            throw new MissingArgument(get_class($this), $name);
-        }
-
-        if ($name === 'and') {
-            return $this->addWhere($args[0], 'AND');
-        }
-
-        if ($name === 'or') {
-            return $this->addWhere($args[0], 'OR');
-        }
-
-        throw new UndefinedMethod(get_class($this), $name);
-    }
-
-    /**
-     * Cast to string
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return $this->build();
+        $this->select($expr, $data);
     }
 
     /**
      * Add select
      *
-     * @param mixed $expressions
+     * @param mixed $expr
+     * @param mixed $data
      *
      * @return this
      */
-    public function select($expressions)
+    public function select($expr, $data = [])
     {
-        foreach ($this->processVar($expressions) as $expression) {
-            $this->select[] = $expression;
+        return $this->addExpression('select', $expr, $data);
+    }
+
+    /**
+     * Add from
+     *
+     * @param mixed $expr
+     * @param mixed $data
+     *
+     * @return this
+     */
+    public function from($expr, $data = [])
+    {
+        return $this->addExpression('from', $expr, $data);
+    }
+
+    /**
+     * Add join
+     *
+     * @param string $type
+     * @param string $expr
+     * @param array  $data
+     *
+     * @return this
+     */
+    protected function addJoin($type, $expr, $data = [])
+    {
+        if (($expr = $this->processExpression($expr, $data)) !== '') {
+            $this->join[] = $type . ' ' . $expr;
         }
 
-        if (empty($this->select) || array_search('*', $this->select) !== false) {
-            $this->select = ['*'];
-            return $this;
-        }
-
-        $this->select = array_unique($this->select);
         return $this;
     }
 
     /**
-     * Replace select
+     * Add join
      *
-     * @param mixed $expressions
-     *
-     * @return this
-     */
-    public function replaceSelect($expressions)
-    {
-        $this->select = [];
-        return $this->select($expressions);
-    }
-
-    /**
-     * Build select
-     *
-     * @return string
-     */
-    public function buildSelect()
-    {
-        return $this->query[] = 'SELECT ' . implode(', ', $this->select);
-    }
-
-    /**
-     * From table
-     *
-     * @param string $table
+     * @param string $expr
+     * @param mixed  $data
      *
      * @return this
      */
-    public function from($table)
+    public function join($expr, $data = [])
     {
-        if ($table !== null && $table !== '') {
-            $this->from = (string) $table;
-        }
-        return $this;
+        return $this->addJoin('JOIN', $expr, $data);
     }
 
     /**
-     * Build from
+     * Add left join
      *
-     * @return string
+     * @param string $expr
+     * @param mixed  $data
+     *
+     * @return this
      */
-    public function buildFrom()
+    public function leftJoin($expr, $data = [])
     {
-        if ($this->from !== null) {
-            return $this->query[] = 'FROM ' . $this->from;
-        }
+        return $this->addJoin('LEFT JOIN', $expr, $data);
+    }
+
+    /**
+     * Add right join
+     *
+     * @param string $expr
+     * @param mixed  $data
+     *
+     * @return this
+     */
+    public function rightJoin($expr, $data = [])
+    {
+        return $this->addJoin('RIGHT JOIN', $expr, $data);
+    }
+
+    /**
+     * Add cross join
+     *
+     * @param string $expr
+     * @param mixed  $data
+     *
+     * @return this
+     */
+    public function crossJoin($expr, $data = [])
+    {
+        return $this->addJoin('CROSS JOIN', $expr, $data);
     }
 
     /**
      * Add group by
      *
-     * @param string $columns
+     * @param string $expr
+     * @param mixed  $data
      *
      * @return this
      */
-    public function groupBy($columns)
+    public function groupBy($expr, $data = [])
     {
-        foreach ($this->processVar($columns) as $column) {
-            $this->group_by[] = $column;
-        }
-
-        $this->group_by = array_unique($this->group_by);
-        return $this;
+        return $this->addExpression('group_by', $expr, $data);
     }
 
     /**
-     * Replace group by
+     * Add having
      *
-     * @param string $columns
+     * @param string $expr
+     * @param mixed  $data
      *
      * @return this
      */
-    public function replaceGroupBy($columns)
+    public function having($expr, $data = [])
     {
-        $this->group_by = [];
-        return $this->groupBy($columns);
-    }
-
-    /**
-     * Build group by
-     *
-     * @return string|null
-     */
-    public function buildGroupBy()
-    {
-        if (! empty($this->group_by)) {
-            return $this->query[] = 'GROUP BY ' . implode(', ', $this->group_by);
-        }
+        return $this->addExpression('having', $expr, $data);
     }
 
     /**
      * Add order by
      *
-     * @param string $columns
+     * @param string $expr
+     * @param mixed  $data
      *
      * @return this
      */
-    public function orderBy($columns)
+    public function orderBy($expr, $data = [])
     {
-        foreach ($this->processVar($columns) as $column) {
-            $this->order_by[] = $column;
-        }
-
-        $this->order_by = array_unique($this->order_by);
-        return $this;
-    }
-
-    /**
-     * Replace order by
-     *
-     * @param string $columns
-     *
-     * @return this
-     */
-    public function replaceOrderBy($columns)
-    {
-        $this->order_by = [];
-        return $this->orderBy($columns);
-    }
-
-    /**
-     * Build order by
-     *
-     * @return string
-     */
-    public function buildOrderBy()
-    {
-        if (! empty($this->order_by)) {
-            return $this->query[] = 'ORDER BY ' . implode(', ', $this->order_by);
-        }
-    }
-
-    /**
-     * Set the offset
-     *
-     * @param int $offset
-     *
-     * @return this
-     */
-    public function offset($offset)
-    {
-        if ($offset >= 0) {
-            $this->offset = (int) $offset;
-        }
-
-        return $this;
+        return $this->addExpression('order_by', $expr, $data);
     }
 
     /**
@@ -285,17 +206,31 @@ class Select implements StatementUsingWhere
      */
     public function limit($limit)
     {
-        if ($limit === null) {
-            $this->limit = null;
-        } elseif ($limit >= 0) {
-            $this->limit = (int) $limit;
+        $this->limit = $limit < 1 ? null : (int) $limit;
+
+        if ($this->page > 0) {
+            $this->offset = $this->page * $this->limit;
         }
 
         return $this;
     }
 
     /**
-     * Set the offset to page * limit
+     * Set the offset
+     *
+     * @param int $offset
+     *
+     * @return this
+     */
+    public function offset($offset)
+    {
+        $this->offset = $offset < 1 ? null : (int) $offset;
+        $this->page = null;
+        return $this;
+    }
+
+    /**
+     * Helper method to set the offset to page * limit
      *
      * @param int $page
      *
@@ -303,40 +238,13 @@ class Select implements StatementUsingWhere
      */
     public function page($page)
     {
-        if ($page >= 0) {
-            $this->offset = (int) $page * $this->limit;
+        $this->page = $page < 1 ? null : (int) $page;
+
+        if ($this->page > 0) {
+            $this->offset = $this->page * $this->limit;
         }
 
         return $this;
-    }
-
-    /**
-     * Build limit
-     *
-     * @return string
-     */
-    public function buildLimit()
-    {
-        if ($this->limit !== null) {
-            if (! isset($this->offset) || $this->offset === 0) {
-                return $this->query[] = 'LIMIT ' . $this->limit;
-            }
-
-            return $this->query[] = 'LIMIT ' . $this->offset . ',' . $this->limit;
-        }
-    }
-
-    /**
-     * Where
-     *
-     * @param string $expression
-     *
-     * @return Where
-     */
-    public function where($expression)
-    {
-        $this->last_join = null;
-        return $this->addWhere($expression);
     }
 
     /**
@@ -348,35 +256,40 @@ class Select implements StatementUsingWhere
     {
         $this->query = [];
 
-        $this->buildSelect();
-        $this->buildFrom();
-        $this->buildWhere();
-        $this->buildGroupBy();
-        $this->buildOrderBy();
-        $this->buildLimit();
-
-        return implode(' ', $this->query);
-    }
-
-    /**
-     * Create an array with trimmed values
-     *
-     * @param mixed $values
-     *
-     * @return array
-     */
-    protected function processVar($values)
-    {
-        $result = [];
-
-        $values = is_array($values) ? $values : [$values];
-        foreach ($values as $value) {
-            $value = preg_replace('/\s+/', ' ', ltrim(rtrim($value, ' '), ' '));
-            if ($value !== null && $value !== '') {
-                $result[] = (string) $value;
-            }
+        if (! empty($this->select)) {
+            $this->query[] = 'SELECT ' . implode(', ', $this->select);
         }
 
-        return $result;
+        if (! empty($this->from)) {
+            $this->query[] = 'FROM ' . implode(', ', $this->from);
+        }
+
+        if (! empty($this->join)) {
+            $this->query[] = implode(' ', $this->join);
+        }
+
+        $this->buildWhere();
+
+        if (! empty($this->group_by)) {
+            $this->query[] = 'GROUP BY ' . implode(', ', $this->group_by);
+        }
+
+        if (! empty($this->having)) {
+            $this->query[] = 'HAVING ' . implode(' ', $this->having);
+        }
+
+        if (! empty($this->order_by)) {
+            $this->query[] = 'ORDER BY ' . implode(', ', $this->order_by);
+        }
+
+        if ($this->limit !== null) {
+            $this->query[] = 'LIMIT ' . $this->limit;
+        }
+
+        if ($this->limit !== null && $this->offset !== null) {
+            $this->query[] = 'OFFSET ' . $this->offset;
+        }
+
+        return implode(' ', $this->query);
     }
 }
