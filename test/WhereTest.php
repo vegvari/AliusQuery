@@ -138,7 +138,7 @@ class WhereTest extends PHPUnit_Framework_TestCase
      *
      * @param Alius\Query\Statement $instance
      */
-    public function testNormal(Statement $instance)
+    public function testWhere(Statement $instance)
     {
         $instance->where('foo = ?', 'bar');
         $this->assertSame('WHERE foo = ?', $instance->buildWhere());
@@ -148,6 +148,39 @@ class WhereTest extends PHPUnit_Framework_TestCase
 
         $instance->orWhere('foobar = ?', 'barfoo');
         $this->assertSame('WHERE foo = ? AND bar = ? OR foobar = ?', $instance->buildWhere());
+    }
+
+    /**
+     * @dataProvider whereDataProvider
+     *
+     * @param Alius\Query\Statement $instance
+     */
+    public function testAndWhere(Statement $instance)
+    {
+        $instance->andWhere('foo = ?', 'bar');
+        $this->assertSame('WHERE foo = ?', $instance->buildWhere());
+    }
+
+    /**
+     * @dataProvider whereDataProvider
+     *
+     * @param Alius\Query\Statement $instance
+     */
+    public function testAndWhereArray(Statement $instance)
+    {
+        $instance->andWhereArray(['foo' => 'bar', 'bar' => 'foo']);
+        $this->assertSame('WHERE foo = ? AND bar = ?', $instance->buildWhere());
+    }
+
+    /**
+     * @dataProvider whereDataProvider
+     *
+     * @param Alius\Query\Statement $instance
+     */
+    public function testOrWhere(Statement $instance)
+    {
+        $instance->orWhere('foo = ?', 'bar');
+        $this->assertSame('WHERE foo = ?', $instance->buildWhere());
     }
 
     /**

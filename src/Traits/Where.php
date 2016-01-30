@@ -26,6 +26,10 @@ trait Where
             return $this->addClosure($expr, $operator);
         }
 
+        if (empty($this->where)) {
+            $operator = null;
+        }
+
         $data = is_array($data) ? $data : [$data];
 
         if (preg_match('/\s+IN$/ui', (string) $expr) === 1) {
@@ -81,6 +85,22 @@ trait Where
     public function andWhere($expr, $data = [])
     {
         return $this->addWhere($expr, $data, 'AND');
+    }
+
+    /**
+     * Add an array of things as andWhere
+     *
+     * @param array $values
+     *
+     * @return this
+     */
+    public function andWhereArray(array $values)
+    {
+        foreach ($values as $key => $value) {
+            $this->andWhere($key . ' = ?', $value);
+        }
+
+        return $this;
     }
 
     /**
