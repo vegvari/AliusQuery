@@ -38,7 +38,7 @@ abstract class Statement
      *
      * @return array
      */
-    final public function data()
+    final public function getData()
     {
         return $this->data;
     }
@@ -48,7 +48,7 @@ abstract class Statement
      *
      * @return array
      */
-    final public function query()
+    final public function getQuery()
     {
         return $this->query;
     }
@@ -64,7 +64,7 @@ abstract class Statement
     final protected function processExpression($expr, array $data)
     {
         if ($expr instanceof self) {
-            $this->data = array_merge($this->data, $expr->data());
+            $this->data = array_merge($this->data, $expr->getData());
             return '(' . $expr . ')';
         }
 

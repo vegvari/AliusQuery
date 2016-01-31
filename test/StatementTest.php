@@ -24,24 +24,24 @@ class StatementTest extends PHPUnit_Framework_TestCase
     {
         foreach ($this->instances as $instance) {
             $instance->addExpression('query', null);
-            $this->assertSame([], $instance->query());
-            $this->assertSame([], $instance->data());
+            $this->assertSame([], $instance->getQuery());
+            $this->assertSame([], $instance->getData());
 
             $instance->addExpression('query', '');
-            $this->assertSame([], $instance->query());
-            $this->assertSame([], $instance->data());
+            $this->assertSame([], $instance->getQuery());
+            $this->assertSame([], $instance->getData());
 
             $instance->addExpression('query', 'foo');
-            $this->assertSame(['foo'], $instance->query());
-            $this->assertSame([], $instance->data());
+            $this->assertSame(['foo'], $instance->getQuery());
+            $this->assertSame([], $instance->getData());
 
             $instance->addExpression('query', 'foo = ?', null);
-            $this->assertSame(['foo', 'foo = ?'], $instance->query());
-            $this->assertSame([null], $instance->data());
+            $this->assertSame(['foo', 'foo = ?'], $instance->getQuery());
+            $this->assertSame([null], $instance->getData());
 
             $instance->addExpression('query', 'foo = ?', '');
-            $this->assertSame(['foo', 'foo = ?', 'foo = ?'], $instance->query());
-            $this->assertSame([null, ''], $instance->data());
+            $this->assertSame(['foo', 'foo = ?', 'foo = ?'], $instance->getQuery());
+            $this->assertSame([null, ''], $instance->getData());
         }
     }
 
@@ -49,8 +49,8 @@ class StatementTest extends PHPUnit_Framework_TestCase
     {
         foreach ($this->instances as $instance) {
             $instance->addExpression('query', (new Insert('foobar', ['foo' => 'bar'])));
-            $this->assertSame(['(INSERT INTO foobar (foo) VALUES (?))'], $instance->query());
-            $this->assertSame(['bar'], $instance->data());
+            $this->assertSame(['(INSERT INTO foobar (foo) VALUES (?))'], $instance->getQuery());
+            $this->assertSame(['bar'], $instance->getData());
         }
     }
 
@@ -58,8 +58,8 @@ class StatementTest extends PHPUnit_Framework_TestCase
     {
         foreach ($this->instances as $instance) {
             $instance->addExpression('query', (new Delete('foobar'))->where('foo = ?', 'bar'));
-            $this->assertSame(['(DELETE FROM foobar WHERE foo = ?)'], $instance->query());
-            $this->assertSame(['bar'], $instance->data());
+            $this->assertSame(['(DELETE FROM foobar WHERE foo = ?)'], $instance->getQuery());
+            $this->assertSame(['bar'], $instance->getData());
         }
     }
 
@@ -67,8 +67,8 @@ class StatementTest extends PHPUnit_Framework_TestCase
     {
         foreach ($this->instances as $instance) {
             $instance->addExpression('query', (new Select('foobar'))->where('foo = ?', 'bar'));
-            $this->assertSame(['(SELECT foobar WHERE foo = ?)'], $instance->query());
-            $this->assertSame(['bar'], $instance->data());
+            $this->assertSame(['(SELECT foobar WHERE foo = ?)'], $instance->getQuery());
+            $this->assertSame(['bar'], $instance->getData());
         }
     }
 
@@ -76,8 +76,8 @@ class StatementTest extends PHPUnit_Framework_TestCase
     {
         foreach ($this->instances as $instance) {
             $instance->addExpression('query', (new Update('foobar'))->where('foo = ?', 'bar'));
-            $this->assertSame(['(UPDATE foobar WHERE foo = ?)'], $instance->query());
-            $this->assertSame(['bar'], $instance->data());
+            $this->assertSame(['(UPDATE foobar WHERE foo = ?)'], $instance->getQuery());
+            $this->assertSame(['bar'], $instance->getData());
         }
     }
 
@@ -85,8 +85,8 @@ class StatementTest extends PHPUnit_Framework_TestCase
     {
         foreach ($this->instances as $instance) {
             $instance->addExpression('query', (new Where('foo = ?', 'bar')));
-            $this->assertSame(['(foo = ?)'], $instance->query());
-            $this->assertSame(['bar'], $instance->data());
+            $this->assertSame(['(foo = ?)'], $instance->getQuery());
+            $this->assertSame(['bar'], $instance->getData());
         }
     }
 

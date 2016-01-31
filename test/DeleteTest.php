@@ -16,7 +16,7 @@ class DeleteTest extends PHPUnit_Framework_TestCase
     {
         $instance = new Delete($name);
         $this->assertSame($query, $instance->build());
-        $this->assertSame([], $instance->data());
+        $this->assertSame([], $instance->getData());
     }
 
     /**
@@ -29,7 +29,7 @@ class DeleteTest extends PHPUnit_Framework_TestCase
     {
         $instance = Query::delete($name);
         $this->assertSame($query, $instance->build());
-        $this->assertSame([], $instance->data());
+        $this->assertSame([], $instance->getData());
     }
 
     public function constructorDataProvider()

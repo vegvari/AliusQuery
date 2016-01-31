@@ -24,7 +24,7 @@ class InsertTest extends PHPUnit_Framework_TestCase
     {
         $instance = new Insert($name);
         $this->assertSame($query, $instance->build());
-        $this->assertSame([], $instance->data());
+        $this->assertSame([], $instance->getData());
     }
 
     /**
@@ -37,7 +37,7 @@ class InsertTest extends PHPUnit_Framework_TestCase
     {
         $instance = Query::insert($name);
         $this->assertSame($query, $instance->build());
-        $this->assertSame([], $instance->data());
+        $this->assertSame([], $instance->getData());
     }
 
     public function constructorDataProvider()
@@ -60,7 +60,7 @@ class InsertTest extends PHPUnit_Framework_TestCase
     {
         $instance = new Insert('foo', $values);
         $this->assertSame($query, $instance->build());
-        $this->assertSame($data, $instance->data());
+        $this->assertSame($data, $instance->getData());
     }
 
     /**
@@ -74,7 +74,7 @@ class InsertTest extends PHPUnit_Framework_TestCase
     {
         $instance = Query::insert('foo', $values);
         $this->assertSame($query, $instance->build());
-        $this->assertSame($data, $instance->data());
+        $this->assertSame($data, $instance->getData());
     }
 
     /**
@@ -88,7 +88,7 @@ class InsertTest extends PHPUnit_Framework_TestCase
     {
         $this->assertSame($this->instance, $this->instance->values($values)); // chainable
         $this->assertSame($query, $this->instance->build());
-        $this->assertSame($data, $this->instance->data());
+        $this->assertSame($data, $this->instance->getData());
     }
 
     public function valuesProvider()
@@ -138,7 +138,7 @@ class InsertTest extends PHPUnit_Framework_TestCase
         $instance = new Insert('foo', ['foo' => 'bar']);
         $instance->values(['foo' => 'bar']);
         $this->assertSame('INSERT INTO foo (foo) VALUES (?), (?)', $instance->build());
-        $this->assertSame(['bar', 'bar'], $instance->data());
+        $this->assertSame(['bar', 'bar'], $instance->getData());
     }
 
     public function testValuesMoreColumn()

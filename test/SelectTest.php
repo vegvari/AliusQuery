@@ -25,7 +25,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
     {
         $instance = new Select($expr, $data);
         $this->assertSame($query, $instance->build());
-        $this->assertSame($expected_data, $instance->data());
+        $this->assertSame($expected_data, $instance->getData());
     }
 
     /**
@@ -40,7 +40,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
     {
         $instance = Query::select($expr, $data);
         $this->assertSame($query, $instance->build());
-        $this->assertSame($expected_data, $instance->data());
+        $this->assertSame($expected_data, $instance->getData());
     }
 
     public function constructorDataProvider()
@@ -80,7 +80,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
     {
         $this->assertSame($this->instance->select($expr), $this->instance); // chainable
         $this->assertSame($query, $this->instance->build());
-        $this->assertSame($data, $this->instance->data());
+        $this->assertSame($data, $this->instance->getData());
     }
 
     public function selectDataProvider()
@@ -107,7 +107,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
         // set string with data
         $this->instance->from('? = ?', [1, 2]);
         $this->assertSame('FROM foo, bar, ? = ?', $this->instance->build());
-        $this->assertSame([1, 2], $this->instance->data());
+        $this->assertSame([1, 2], $this->instance->getData());
     }
 
     public function testJoin()
@@ -124,7 +124,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
         // set string with data
         $this->instance->join('? = ?', [1, 2]);
         $this->assertSame('JOIN foo JOIN ? = ?', $this->instance->build());
-        $this->assertSame([1, 2], $this->instance->data());
+        $this->assertSame([1, 2], $this->instance->getData());
     }
 
     public function testLeftJoin()
@@ -141,7 +141,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
         // set string with data
         $this->instance->leftJoin('? = ?', [1, 2]);
         $this->assertSame('LEFT JOIN foo LEFT JOIN ? = ?', $this->instance->build());
-        $this->assertSame([1, 2], $this->instance->data());
+        $this->assertSame([1, 2], $this->instance->getData());
     }
 
     public function testRightJoin()
@@ -158,7 +158,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
         // set string with data
         $this->instance->rightJoin('? = ?', [1, 2]);
         $this->assertSame('RIGHT JOIN foo RIGHT JOIN ? = ?', $this->instance->build());
-        $this->assertSame([1, 2], $this->instance->data());
+        $this->assertSame([1, 2], $this->instance->getData());
     }
 
     public function testCrossJoin()
@@ -175,7 +175,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
         // set string with data
         $this->instance->crossJoin('? = ?', [1, 2]);
         $this->assertSame('CROSS JOIN foo CROSS JOIN ? = ?', $this->instance->build());
-        $this->assertSame([1, 2], $this->instance->data());
+        $this->assertSame([1, 2], $this->instance->getData());
     }
 
     public function testGroupBy()
@@ -192,7 +192,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
         // set string with data
         $this->instance->groupBy('? = ?', [1, 2]);
         $this->assertSame('GROUP BY foo, ? = ?', $this->instance->build());
-        $this->assertSame([1, 2], $this->instance->data());
+        $this->assertSame([1, 2], $this->instance->getData());
     }
 
     public function testHaving()
@@ -209,7 +209,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
         // set string with data
         $this->instance->having('? = ?', [1, 2]);
         $this->assertSame('HAVING foo ? = ?', $this->instance->build());
-        $this->assertSame([1, 2], $this->instance->data());
+        $this->assertSame([1, 2], $this->instance->getData());
     }
 
     public function testOrderBy()
@@ -226,7 +226,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
         // set string with data
         $this->instance->orderBy('? = ?', [1, 2]);
         $this->assertSame('ORDER BY foo, ? = ?', $this->instance->build());
-        $this->assertSame([1, 2], $this->instance->data());
+        $this->assertSame([1, 2], $this->instance->getData());
     }
 
     public function testLimit()

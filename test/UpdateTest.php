@@ -25,7 +25,7 @@ class UpdateTest extends PHPUnit_Framework_TestCase
     {
         $instance = new Update($name, $values);
         $this->assertSame($query, $instance->build());
-        $this->assertSame($expected_data, $instance->data());
+        $this->assertSame($expected_data, $instance->getData());
     }
 
     /**
@@ -40,7 +40,7 @@ class UpdateTest extends PHPUnit_Framework_TestCase
     {
         $instance = Query::update($name, $values);
         $this->assertSame($query, $instance->build());
-        $this->assertSame($expected_data, $instance->data());
+        $this->assertSame($expected_data, $instance->getData());
     }
 
     public function constructorDataProvider()
@@ -80,7 +80,7 @@ class UpdateTest extends PHPUnit_Framework_TestCase
     {
         $instance = new Update('foo', $values);
         $this->assertSame($query, $instance->build());
-        $this->assertSame($data, $instance->data());
+        $this->assertSame($data, $instance->getData());
     }
 
     /**
@@ -94,7 +94,7 @@ class UpdateTest extends PHPUnit_Framework_TestCase
     {
         $instance = Query::update('foo', $values);
         $this->assertSame($query, $instance->build());
-        $this->assertSame($data, $instance->data());
+        $this->assertSame($data, $instance->getData());
     }
 
     /**
@@ -108,7 +108,7 @@ class UpdateTest extends PHPUnit_Framework_TestCase
     {
         $this->assertSame($this->instance, $this->instance->values($values)); // chainable
         $this->assertSame($query, $this->instance->build());
-        $this->assertSame($data, $this->instance->data());
+        $this->assertSame($data, $this->instance->getData());
     }
 
     public function valuesProvider()
@@ -150,7 +150,7 @@ class UpdateTest extends PHPUnit_Framework_TestCase
         $this->instance->values(['foo' => 'bar']);
         $this->instance->values(['foo' => 'bar']);
         $this->assertSame('UPDATE foo SET foo = ?, foo = ?', $this->instance->build());
-        $this->assertSame(['bar', 'bar'], $this->instance->data());
+        $this->assertSame(['bar', 'bar'], $this->instance->getData());
     }
 
     public function testSetChainable()
@@ -162,14 +162,14 @@ class UpdateTest extends PHPUnit_Framework_TestCase
     {
         $this->instance->set('foo', null);
         $this->assertSame('UPDATE foo SET foo = ?', $this->instance->build());
-        $this->assertSame([null], $this->instance->data());
+        $this->assertSame([null], $this->instance->getData());
     }
 
     public function testSetWithEmpty()
     {
         $this->instance->set('foo', '');
         $this->assertSame('UPDATE foo SET foo = ?', $this->instance->build());
-        $this->assertSame([''], $this->instance->data());
+        $this->assertSame([''], $this->instance->getData());
     }
 
     public function testSetDuplicate()
@@ -177,7 +177,7 @@ class UpdateTest extends PHPUnit_Framework_TestCase
         $this->instance->set('foo', 'bar');
         $this->instance->set('foo', 'bar');
         $this->assertSame('UPDATE foo SET foo = ?, foo = ?', $this->instance->build());
-        $this->assertSame(['bar', 'bar'], $this->instance->data());
+        $this->assertSame(['bar', 'bar'], $this->instance->getData());
     }
 
     public function testSetWithInitialData()
@@ -185,6 +185,6 @@ class UpdateTest extends PHPUnit_Framework_TestCase
         $instance = new Update('foo', ['foo' => 'bar']);
         $instance->set('foo', 'bar');
         $this->assertSame('UPDATE foo SET foo = ?, foo = ?', $instance->build());
-        $this->assertSame(['bar', 'bar'], $instance->data());
+        $this->assertSame(['bar', 'bar'], $instance->getData());
     }
 }

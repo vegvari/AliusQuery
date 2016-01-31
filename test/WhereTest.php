@@ -19,7 +19,7 @@ class WhereTest extends PHPUnit_Framework_TestCase
     {
         $instance = new Where($expr, $data);
         $this->assertSame($query, $instance->build());
-        $this->assertSame($expected_data, $instance->data());
+        $this->assertSame($expected_data, $instance->getData());
     }
 
     /**
@@ -34,7 +34,7 @@ class WhereTest extends PHPUnit_Framework_TestCase
     {
         $instance = Query::where($expr, $data);
         $this->assertSame($query, $instance->build());
-        $this->assertSame($expected_data, $instance->data());
+        $this->assertSame($expected_data, $instance->getData());
     }
 
     public function constructorDataProvider()
@@ -130,7 +130,7 @@ class WhereTest extends PHPUnit_Framework_TestCase
         $this->assertSame('WHERE (foo = ? AND bar = ?) AND (foo = ? AND bar = ?) OR (foo = ? AND bar = ?)', $instance->buildWhere());
 
         // check data
-        $this->assertSame(['closure1', 'closure2', 'closure1', 'closure2', 'closure1', 'closure2'], $instance->data());
+        $this->assertSame(['closure1', 'closure2', 'closure1', 'closure2', 'closure1', 'closure2'], $instance->getData());
     }
 
     /**
@@ -192,7 +192,7 @@ class WhereTest extends PHPUnit_Framework_TestCase
     {
         $instance->where('foobar BETWEEN', ['foo', 'bar']);
         $this->assertSame('WHERE foobar BETWEEN ? AND ?', $instance->buildWhere());
-        $this->assertSame(['foo', 'bar'], $instance->data());
+        $this->assertSame(['foo', 'bar'], $instance->getData());
     }
 
     /**
@@ -209,6 +209,6 @@ class WhereTest extends PHPUnit_Framework_TestCase
         // set array
         $instance->where('foobar IN', ['bar', 'foo']);
         $this->assertSame('WHERE foobar IN (?) foobar IN (?, ?)', $instance->buildWhere());
-        $this->assertSame(['foo', 'bar', 'foo'], $instance->data());
+        $this->assertSame(['foo', 'bar', 'foo'], $instance->getData());
     }
 }
